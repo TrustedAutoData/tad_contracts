@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct User {
-    pub wallet: Pubkey,
+    pub authority: Pubkey,
     pub email: String,
 }
 
