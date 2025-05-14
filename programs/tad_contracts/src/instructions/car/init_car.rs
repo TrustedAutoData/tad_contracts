@@ -6,6 +6,10 @@ pub fn init_car(ctx: Context<InitCar>, vin: String) -> Result<()> {
     car.vin = vin;
     car.owner = ctx.accounts.owner.key();
     car.dealer = ctx.accounts.dealer.key();
+    car.total_km = 0;
+    car.service_count = 0;
+    car.last_service_timestamp = 0;
+    car.obd_bumps = ctx.bumps.car;
     Ok(())
 }
 
@@ -21,7 +25,7 @@ pub struct InitCar<'info> {
     )]
     pub car: Account<'info, Car>,
 
-    /// CHECK: for now
+    /// CHECK: Dealer public key (not validated here)
     pub dealer: UncheckedAccount<'info>,
 
     #[account(mut)]

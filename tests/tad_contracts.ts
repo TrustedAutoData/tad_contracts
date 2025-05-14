@@ -19,7 +19,17 @@ describe("tad_contracts", () => {
   const dealerName = "TestDealer";
   const userEmail = "user@example.com";
 
+  // Create a new keypair to act as the car owner
+  const owner = anchor.web3.Keypair.generate();
+
   before(async () => {
+    // Airdrop SOL to the owner
+    const airdropSig = await provider.connection.requestAirdrop(
+      owner.publicKey,
+      1e9
+    ); // 1 SOL
+    await provider.connection.confirmTransaction(airdropSig);
+
     [configPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("config")],
       program.programId
@@ -90,16 +100,6 @@ describe("tad_contracts", () => {
   });
 
   it("Initializes car", async () => {
-    // Create a new keypair to act as the car owner
-    const owner = anchor.web3.Keypair.generate();
-
-    // Airdrop SOL to the owner
-    const airdropSig = await provider.connection.requestAirdrop(
-      owner.publicKey,
-      1e9
-    ); // 1 SOL
-    await provider.connection.confirmTransaction(airdropSig);
-
     // Derive the car PDA using the VIN
     const [carPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("car"), Buffer.from(vin)],
@@ -122,5 +122,47 @@ describe("tad_contracts", () => {
     const car = await program.account.car.fetch(carPda);
     assert.equal(car.vin, vin);
     assert.ok(car.owner.equals(owner.publicKey));
+  });
+
+  it("Registers car KM", async () => {
+    const km = 5000;
+
+    const tx = await program.methods
+      .registerCarKm(new anchor.BN(km))
+      .accounts({
+        car: carPda,
+        owner: owner.publicKey,
+      })
+      .rpc();
+
+    console.log("✅ KM registration tx:", tx);
+
+    const car = await program.account.car.fetch(carPda);
+    console.log("🚗 Total KM after update:", car.totalKm.toString());
+
+    assert.equal(car.totalKm.toNumber(), km);
+  });
+
+  it("Reports car error", async () => {
+    const errorCode = 101;
+    const errorMessage = "Engine Overheating";
+
+    const tx = await program.methods
+      .reportCarError(errorCode, errorMessage)
+      .accounts({
+        car: carPda,
+      })
+      .rpc();
+
+    console.log("🚨 Error report tx:", tx);
+    console.log("🛠️ Reported error:", {
+      vin,
+      code: errorCode,
+      message: errorMessage,
+    });
+
+    const car = await program.account.car.fetch(carPda);
+    console.log("📋 VIN confirmed:", car.vin);
+    assert.ok(car.vin === vin);
   });
 });

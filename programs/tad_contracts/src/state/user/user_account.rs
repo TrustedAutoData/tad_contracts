@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 #[account]
 pub struct User {
     pub authority: Pubkey,
+    pub points: u64,
     pub email: String,
 }
 
