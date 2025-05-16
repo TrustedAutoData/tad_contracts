@@ -11,6 +11,8 @@ declare_id!("3AUUVkXFjfxxTDk7TpZg3VDuagqsihTrjmjka9HchDQc");
 
 #[program]
 pub mod tad_contracts {
+    use crate::instruction::AddUserPoints;
+
     use super::*;
 
     pub fn initialize_car(ctx: Context<InitCar>, vin: String) -> Result<()> {
@@ -33,11 +35,32 @@ pub mod tad_contracts {
         register_km(ctx, new_km)
     }
 
+    pub fn register_service_attendance(
+        ctx: Context<RegisterService>,
+        report_id: u64,
+        content_uri: String,
+        report_type: String,
+    ) -> Result<()> {
+        register_service(ctx, report_id, content_uri, report_type)
+    }
+
+    pub fn get_report(
+        ctx: Context<Report>,
+        report_id: u64,
+        content_uri: String,
+        report_type: String,
+    ) -> Result<()> {
+        get_car_report(ctx, report_id, content_uri, report_type)
+    }
+
     pub fn report_car_error(
         ctx: Context<ReportError>,
         error_code: u16,
         message: String,
     ) -> Result<()> {
         report_error(ctx, error_code, message)
+    }
+    pub fn add_user_points(ctx: Context<AddPointsForService>, points_to_add: u64) -> Result<()> {
+        add_points_for_service(ctx, points_to_add)
     }
 }

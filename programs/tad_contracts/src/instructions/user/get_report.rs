@@ -1,17 +1,29 @@
-use crate::state::{car::Car, ReportData};
+use crate::state::{car::Car, Config, DealerReportData};
 use anchor_lang::prelude::*;
+use anchor_lang::system_program;
 use anchor_spl::metadata::{mpl_token_metadata, Metadata};
 use mpl_core::{
     instructions::CreateV2CpiBuilder,
     types::{Attribute, Attributes, FreezeDelegate, Plugin, PluginAuthority, PluginAuthorityPair},
 };
 
-pub fn register_service(
-    ctx: Context<RegisterService>,
+pub fn get_car_report(
+    ctx: Context<Report>,
     report_id: u64,
     content_uri: String,
     report_type: String,
 ) -> Result<()> {
+    system_program::transfer(
+        CpiContext::new(
+            ctx.accounts.system_program.to_account_info(),
+            system_program::Transfer {
+                from: ctx.accounts.user.to_account_info(),
+                to: ctx.accounts.vault.clone(),
+            },
+        ),
+        25 * 10u64.pow(7 as u32),
+    )?;
+
     let creator = ctx.accounts.creator.key();
     let car = &ctx.accounts.car;
 
@@ -40,10 +52,10 @@ pub fn register_service(
     CreateV2CpiBuilder::new(&ctx.accounts.mpl_core_program)
         .asset(&ctx.accounts.owner_nft)
         .authority(Some(&ctx.accounts.creator))
-        .payer(&ctx.accounts.creator)
-        .owner(Some(&ctx.accounts.owner))
+        .payer(&ctx.accounts.user)
+        .owner(Some(&ctx.accounts.user))
         .system_program(&ctx.accounts.system_program)
-        .name(format!("Service Report for VIN {}", car.vin))
+        .name(format!("Car report {}", car.vin))
         .uri(content_uri.clone())
         .plugins(vec![
             attributes_plugin,
@@ -55,7 +67,7 @@ pub fn register_service(
         .invoke()?;
 
     // Save metadata
-    let report_data = &mut ctx.accounts.report_data;
+    let report_data = &mut ctx.accounts.dealer_report_data;
     report_data.report_id = report_id;
     report_data.content_uri = content_uri;
     report_data.is_owner_nft = true;
@@ -64,7 +76,7 @@ pub fn register_service(
 }
 #[derive(Accounts)]
 #[instruction(report_id: u64, content_uri: String, report_type: String)]
-pub struct RegisterService<'info> {
+pub struct Report<'info> {
     #[account(
         seeds = [b"car", car.vin.as_bytes()],
         bump = car.obd_bumps,
@@ -74,11 +86,17 @@ pub struct RegisterService<'info> {
     #[account(
         init,
         payer = creator,
-        space = ReportData::MAX_LEN,
-        seeds = [b"report_data", car.key().as_ref(), report_id.to_le_bytes().as_ref()],
+        space = DealerReportData::MAX_LEN,
+        seeds = [b"dealer_report_data", car.key().as_ref(), report_id.to_le_bytes().as_ref()],
         bump
     )]
-    pub report_data: Account<'info, ReportData>,
+    pub dealer_report_data: Account<'info, DealerReportData>,
+
+    #[account(
+        seeds = [b"config"],
+        bump,
+    )]
+    pub config: Account<'info, Config>,
 
     /// CHECK: Metaplex Core NFT address
     #[account(mut)]
@@ -88,8 +106,10 @@ pub struct RegisterService<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
 
-    #[account()]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub user: Signer<'info>,
+    #[account(address = config.vault)]
+    pub vault: AccountInfo<'info>,
 
     #[account(address = mpl_token_metadata::ID)]
     pub mpl_token_metadata_program: Program<'info, Metadata>,

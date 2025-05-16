@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 
 pub fn init_config(ctx: Context<InitConfig>) -> Result<()> {
     ctx.accounts.config.admin = ctx.accounts.admin.key();
+    ctx.accounts.config.vault = ctx.accounts.admin.key();
     Ok(())
 }
 

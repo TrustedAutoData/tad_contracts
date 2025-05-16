@@ -8,5 +8,6 @@ pub struct User {
 }
 
 impl User {
-    pub const LEN: usize = 8 + 32 + 4 + 64; // assuming email max 64 chars
+    pub const MAX_EMAIL_LEN: usize = 64;
+    pub const LEN: usize = 8 + 32 + 8 + 4 + Self::MAX_EMAIL_LEN;
 }
