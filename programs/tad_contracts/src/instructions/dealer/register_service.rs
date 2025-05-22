@@ -59,6 +59,7 @@ pub fn register_service(
     report_data.report_id = report_id;
     report_data.content_uri = content_uri;
     report_data.is_owner_nft = true;
+    report_data.report_nft = ctx.accounts.owner_nft.key();
 
     Ok(())
 }

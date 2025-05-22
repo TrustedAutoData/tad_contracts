@@ -7,7 +7,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("3AUUVkXFjfxxTDk7TpZg3VDuagqsihTrjmjka9HchDQc");
+declare_id!("G9bxnJromWRrVNNP4WgY4u2x2E7tWJ317vjEaKxpqbJb");
 
 #[program]
 pub mod tad_contracts {

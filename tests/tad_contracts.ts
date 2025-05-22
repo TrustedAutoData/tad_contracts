@@ -273,7 +273,7 @@ describe("tad_contracts", () => {
         ownerNft: ownerNft.publicKey,
         creator: admin.publicKey,
         user: user.publicKey,
-        vault: new PublicKey("AwaK517AuviY4K5RfVxBQJWtpHPAAYrSUfGaimG21kDy"),
+        vault: new PublicKey("3Qc5TBFKHSbEKxD81e5Pcczdg8Y5goFHga6HJdKgRis5"),
         mplTokenMetadataProgram: new PublicKey(
           "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         ),
